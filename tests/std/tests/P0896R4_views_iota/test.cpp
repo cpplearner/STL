@@ -139,8 +139,8 @@ constexpr void test_integral() {
         assert(second >= first);
         static_assert(noexcept(first >= second)); // strengthened
 
-        assert(first <=> second < 0);
-        assert(second <=> first > 0);
+        assert((first <=> second) < 0);
+        assert((second <=> first) > 0);
         static_assert(noexcept(first <=> second)); // strengthened
 
         {
@@ -232,11 +232,16 @@ constexpr void test_integral() {
         {
             const same_as<R> auto rng = views::iota(low);
 
-            auto i = low;
-            for (const auto& e : rng) {
-                assert(e == i);
-                if (++i == high) {
-                    break;
+#ifdef __EDG__ // TODO (EDG ICEs with range-based for)
+            if (!std::is_constant_evaluated())
+#endif // defined(__EDG__)
+            {
+                auto i = low;
+                for (const auto& e : rng) {
+                    assert(e == i);
+                    if (++i == high) {
+                        break;
+                    }
                 }
             }
         }
@@ -248,11 +253,16 @@ constexpr void test_integral() {
             const same_as<R> auto rng = views::iota(low);
             const ranges::subrange crng{rng.cbegin(), rng.cend()};
 
-            auto i = low;
-            for (const auto& e : crng) {
-                assert(e == i);
-                if (++i == high) {
-                    break;
+#ifdef __EDG__ // TODO (EDG ICEs with range-based for)
+            if (!std::is_constant_evaluated())
+#endif // defined(__EDG__)
+            {
+                auto i = low;
+                for (const auto& e : crng) {
+                    assert(e == i);
+                    if (++i == high) {
+                        break;
+                    }
                 }
             }
         }

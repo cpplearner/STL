@@ -672,7 +672,11 @@ namespace iterator_synopsis_test {
     STATIC_ASSERT(same_as<iter_reference_t<int[]>, int&>);
     STATIC_ASSERT(same_as<iter_reference_t<int[4]>, int&>);
     STATIC_ASSERT(same_as<iter_reference_t<int (*)[4]>, int (&)[4]>);
+#ifdef __EDG__ // TODO (EDG has trouble with function pointers)
+    STATIC_ASSERT(same_as<iter_reference_t<int (*)(int)>, int(int)>);
+#else // ^^^ workaround / no workaround vvv
     STATIC_ASSERT(same_as<iter_reference_t<int (*)(int)>, int (&)(int)>);
+#endif // ^^^ no workaround ^^^
 
     STATIC_ASSERT(same_as<iter_reference_t<dereferences_to<int>>, int>);
     STATIC_ASSERT(same_as<iter_reference_t<dereferences_to<int&>>, int&>);
@@ -1075,9 +1079,9 @@ namespace iterator_cust_move_test {
     STATIC_ASSERT(noexcept(ranges::iter_move(static_cast<int const*>(&some_ints[2]))));
 
     STATIC_ASSERT(same_as<iter_rvalue_reference_t<int[]>, int&&>);
-#if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1008447
+#ifdef __clang__ // TRANSITION, VSO-1008447, TODO (EDG has trouble with function pointers)
     STATIC_ASSERT(same_as<iter_rvalue_reference_t<int(int)>, int (&)(int)>);
-#else // ^^^ no workaround / workaround vvv
+#elif !defined(__EDG__) // ^^^ no workaround / workaround vvv
     STATIC_ASSERT(same_as<iter_rvalue_reference_t<int(int)>, int (*)(int)>);
 #endif // TRANSITION, VSO-1008447
 
@@ -1085,16 +1089,18 @@ namespace iterator_cust_move_test {
     STATIC_ASSERT(ranges::iter_move(some_ints) == 0);
     STATIC_ASSERT(noexcept(ranges::iter_move(some_ints)));
 
+#ifndef __EDG__ // TODO (EDG has trouble with function pointers)
     constexpr int f(int i) noexcept {
         return i + 1;
     }
-#if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1008447
+#ifdef __clang__ // TRANSITION, VSO-1008447
     STATIC_ASSERT(same_as<iter_rvalue_reference_t<int (*)(int)>, int (&)(int)>);
 #else // ^^^ no workaround / workaround vvv
     STATIC_ASSERT(same_as<iter_rvalue_reference_t<int (*)(int)>, int (&&)(int)>);
 #endif // TRANSITION, VSO-1008447
     STATIC_ASSERT(ranges::iter_move (&f)(42) == 43);
     STATIC_ASSERT(noexcept(ranges::iter_move(&f)));
+#endif // !defined(__EDG__)
 
     struct ref_is_lvalue {
         constexpr int const& operator*() const {
@@ -3052,6 +3058,7 @@ namespace iter_ops {
         }
 
         {
+#ifndef __EDG__ // TODO (EDG rejects conversion from int[] to int* const&)
             // Call distance(i, s) with arrays which must be decayed to pointers.
             // (This behavior was regressed by LWG-3392.)
             int some_ints[] = {1, 2, 3};
@@ -3069,6 +3076,7 @@ namespace iter_ops {
             STATIC_ASSERT(noexcept(distance(const_ints + 1, const_ints)));
             assert(distance(const_ints, const_ints) == 0);
             STATIC_ASSERT(noexcept(distance(const_ints, const_ints)));
+#endif // !defined(__EDG__)
         }
 
         return true;

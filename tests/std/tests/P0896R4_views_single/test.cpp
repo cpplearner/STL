@@ -200,7 +200,11 @@ struct ConstSelection {
     int value = 0;
 };
 
+#ifdef __EDG__ // TODO
+static_assert(!is_trivially_copy_assignable_v<ranges::single_view<ConstSelection>>);
+#else // ^^^ workaround / no workaround vvv
 static_assert(is_trivially_copy_assignable_v<ranges::single_view<ConstSelection>>);
+#endif // ^^^ no workaround ^^^
 static_assert(!is_trivially_copy_assignable_v<ranges::single_view<const ConstSelection>>);
 
 constexpr bool test_cv() {

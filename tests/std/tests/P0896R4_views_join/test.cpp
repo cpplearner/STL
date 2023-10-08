@@ -747,13 +747,17 @@ int main() {
 
     { // P2328 range of prvalue string using global function
         assert(ranges::equal(views::iota(0u, 5u) | views::transform(ToString) | views::join, expected));
+#if !(defined(_DEBUG) && defined(__EDG__)) // TODO (EDG bug)
         static_assert(ranges::equal(views::iota(0u, 5u) | views::transform(ToString) | views::join, expected));
+#endif // !(defined(_DEBUG) && defined(__EDG__))
     }
 
     { // P2328 range of prvalue string using lambda
         constexpr auto ToStringLambda = [](const size_t i) { return string{prvalue_input[i]}; };
         assert(ranges::equal(views::iota(0u, 5u) | views::transform(ToStringLambda) | views::join, expected));
+#if !(defined(_DEBUG) && defined(__EDG__)) // TODO (EDG bug)
         static_assert(ranges::equal(views::iota(0u, 5u) | views::transform(ToStringLambda) | views::join, expected));
+#endif // !(defined(_DEBUG) && defined(__EDG__))
     }
 
     { // Immovable type
