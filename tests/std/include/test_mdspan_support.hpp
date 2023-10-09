@@ -102,9 +102,10 @@ concept CheckCallOperatorOfLayoutMapping = requires(const M m, Indices... i) {
 };
 
 template <class M>
-concept CheckStrideMemberFunction = requires(M mapping, M::rank_type i) {
-    { mapping.stride(i) } -> std::same_as<typename M::index_type>;
-};
+concept CheckStrideMemberFunction =
+    requires(M mapping, typename M::rank_type i) { // TODO (EDG needs the 'typename' keyword)
+        { mapping.stride(i) } -> std::same_as<typename M::index_type>;
+    };
 
 template <class M>
 constexpr bool check_layout_mapping_requirements() {
@@ -121,7 +122,7 @@ constexpr bool check_layout_mapping_requirements() {
         static_assert(CheckCallOperatorOfLayoutMapping<M, decltype(Indices)...>);
     }(std::make_index_sequence<M::extents_type::rank()>{});
 
-    if constexpr (requires(M m, M::rank_type i) { m.stride(i); }) {
+    if constexpr (requires(M m, typename M::rank_type i) { m.stride(i); }) { // TODO (EDG needs the 'typename' keyword)
         static_assert(CheckStrideMemberFunction<M>);
     }
 
@@ -156,10 +157,11 @@ namespace detail {
         && std::is_same_v<typename A::offset_policy::element_type, typename A::element_type>;
 
     template <class A>
-    concept CheckMemberFunctionsOfAccessorPolicy = requires(const A a, const A::data_handle_type p, size_t i) {
-        { a.access(p, i) } -> std::same_as<typename A::reference>;
-        { a.offset(p, i) } -> std::same_as<typename A::offset_policy::data_handle_type>;
-    };
+    concept CheckMemberFunctionsOfAccessorPolicy =
+        requires(const A a, const typename A::data_handle_type p, size_t i) { // TODO (EDG needs the 'typename' keyword)
+            { a.access(p, i) } -> std::same_as<typename A::reference>;
+            { a.offset(p, i) } -> std::same_as<typename A::offset_policy::data_handle_type>;
+        };
 } // namespace detail
 
 template <class A>

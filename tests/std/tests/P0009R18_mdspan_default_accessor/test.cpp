@@ -69,6 +69,8 @@ constexpr bool test() {
 }
 
 int main() {
+#if !(defined(_DEBUG) && defined(__EDG__)) // TODO (EDG bug)
     static_assert(test());
+#endif // !(defined(_DEBUG) && defined(__EDG__))
     test();
 }
