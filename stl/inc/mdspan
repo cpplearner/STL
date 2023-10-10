@@ -1071,7 +1071,7 @@ struct _Mdspan_mapping_base {
 
     using _Mapping = _LayoutPolicy::template mapping<_Extents>;
 
-    constexpr _Mdspan_mapping_base() noexcept = default;
+    constexpr _Mdspan_mapping_base() = default;
 
     constexpr explicit _Mdspan_mapping_base(const _Extents& _Exts) : _Map(_Exts) {}
 
@@ -1107,7 +1107,7 @@ concept _Elidable_accessor_policy = _Is_specialization_v<_AccessorPolicy, defaul
 
 template <class _AccessorPolicy>
 struct _Mdspan_accessor_base {
-    constexpr _Mdspan_accessor_base() noexcept = default;
+    constexpr _Mdspan_accessor_base() = default;
 
     template <class _OtherAccessorPolicy>
     constexpr explicit _Mdspan_accessor_base(const _OtherAccessorPolicy& _Acc_) : _Acc(_Acc_) {}
@@ -1187,9 +1187,16 @@ public:
     constexpr mdspan() noexcept(
         is_nothrow_default_constructible_v<data_handle_type>&& is_nothrow_default_constructible_v<mapping_type>&&
             is_nothrow_default_constructible_v<accessor_type>) // strengthened
-        requires (rank_dynamic() > 0) && is_default_constructible_v<data_handle_type>
-              && is_default_constructible_v<mapping_type> && is_default_constructible_v<accessor_type>
-    {}
+        requires
+#ifdef __EDG__ // TODO
+        (extents_type::_Rank_dynamic > 0)
+#else // ^^^ workaround / no workaround vvv
+        (rank_dynamic() > 0)
+#endif // ^^^ no workaround ^^^
+        && is_default_constructible_v<data_handle_type> && is_default_constructible_v<mapping_type>
+        && is_default_constructible_v<accessor_type>
+    {
+    }
 
     constexpr mdspan(const mdspan&) = default;
     constexpr mdspan(mdspan&&)      = default;
