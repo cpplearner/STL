@@ -620,14 +620,14 @@ using move_only_view = test::range<Category, const int, test::Sized{is_random}, 
     test::CanView::yes, test::Copyability::move_only>;
 
 int main() {
-#ifndef __clang__ // TRANSITION, LLVM-62096
+#if !defined(__clang__) && !defined(__EDG__) // TRANSITION, LLVM-62096, TODO (EDG)
     { // Validate views
         // ... copyable
         constexpr span<const int> s{some_ints};
         STATIC_ASSERT(test_one(s, some_ints));
         test_one(s, some_ints);
     }
-#endif // TRANSITION, LLVM-62096
+#endif // TRANSITION, LLVM-62096, TODO (EDG)
 
     { // ... move-only
         test_one(move_only_view<input_iterator_tag, test::Common::no>{some_ints}, some_ints);
@@ -641,8 +641,10 @@ int main() {
     }
 
     { // Validate non-views
+#ifndef __EDG__ // TODO (EDG crash)
         STATIC_ASSERT(test_one(some_ints, some_ints));
         test_one(some_ints, some_ints);
+#endif // !defined(__EDG__)
 
         // Test with lvalue, rvalue, and wrapped in ref_view non-views
         auto vec = some_ints | ranges::to<vector>();
@@ -656,11 +658,13 @@ int main() {
         test_one(some_ints | ranges::to<forward_list>(), some_ints);
     }
 
+#ifndef __EDG__ // TODO (EDG crash)
     { // Validate single_view
         static constexpr int one_int[1] = {333};
         STATIC_ASSERT(test_one(views::single(333), one_int));
         test_one(views::single(333), one_int);
     }
+#endif // !defined(__EDG__)
 
     { // Validate empty_view
         array<int, 0> empty_arr;
@@ -686,13 +690,13 @@ int main() {
         test_one(as_const(views::empty<const volatile int>), empty_arr);
     }
 
-#ifndef __clang__ // TRANSITION, LLVM-62096
+#if !defined(__clang__) && !defined(__EDG__) // TRANSITION, LLVM-62096, TODO (EDG)
     { // empty range
         using Span = span<int>;
         STATIC_ASSERT(test_one(Span{}, Span{}));
         test_one(Span{}, Span{});
     }
-#endif // TRANSITION, LLVM-62096
+#endif // TRANSITION, LLVM-62096, TODO (EDG)
 
     STATIC_ASSERT(instantiation_test());
     instantiation_test();
