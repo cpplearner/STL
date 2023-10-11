@@ -2555,7 +2555,11 @@ namespace test_equality_comparable_with {
     STATIC_ASSERT(test<std::nullptr_t>());
     STATIC_ASSERT(test<int*, void*>());
     STATIC_ASSERT(test<int[42]>());
+#if !_HAS_CXX23 && defined(__EDG__) // TODO (EDG bug)
+    STATIC_ASSERT(!test<int(int)>());
+#else // ^^^ assert bug so we'll notice when it's fixed / no workaround vvv
     STATIC_ASSERT(test<int(int)>());
+#endif // ^^^ no workaround ^^^
 
     template <int>
     struct CrossSpecializationComparable {
@@ -2750,7 +2754,11 @@ namespace test_totally_ordered_with {
 
     STATIC_ASSERT(test<int[42]>());
 
+#if !_HAS_CXX23 && defined(__EDG__) // TODO (EDG bug)
+    STATIC_ASSERT(!test<int(int)>());
+#else // ^^^ assert bug so we'll notice when it's fixed / no workaround vvv
     STATIC_ASSERT(test<int(int)>());
+#endif // ^^^ no workaround ^^^
 
     template <int>
     struct Ordered {
